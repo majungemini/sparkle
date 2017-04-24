@@ -17,8 +17,9 @@
 import webapp2, jinja2, os, re
 from google.appengine.ext import db
 from models import Post, User
+import hashutils
 
-
+"""reuse default, login,signup,logout,hashutils codes from blog assignment"""
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 # A list of paths that a user must be logged in to access
@@ -26,7 +27,7 @@ auth_paths = [
     '/blog/newpost'
 ]
 class DefaultHandler(webapp2.RequestHandler):
-    """retype from blog"""
+
     def get_post(self, limit,offset):
         """get all posts ordered by creation date (descending)"""
         query = Post.all().order('-created')
@@ -62,7 +63,7 @@ class DefaultHandler(webapp2.RequestHandler):
 
     def set_secure_cookie(self,name,val):
         cookie_val = hashutils.make_secure_val(val)
-        self.request.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name,cookie_val))
+        self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name,cookie_val))
 
     def initialize(self, *a, **kw):
         """
@@ -103,7 +104,7 @@ class MainPageHandler(DefaultHandler):
                             posts=posts,
 
                             page_size=self.page_size,
-                            
+
                             username=username)
         self.response.out.write(response)
 
@@ -112,13 +113,130 @@ class NewPostHandler(DefaultHandler):
         self.response.write('NewPostHandler!')
 class LoginHandler(DefaultHandler):
     def get(self):
-        self.response.write('LoginHandler!')
+        self.render_login_form()
+
+    def render_login_form(self, error=""):
+        """Render the login form with or without an error,base on parameters """
+        t = jinja_env.get_template("login.html")
+        response = t.render(error=error)
+        self.response.out.write(response)
+
+    def post(self):
+        submitted_username = self.request.get("username")
+        submitted_password = self.request.get("password")
+
+        user = self.get_user_by_name(submitted_username)
+
+        if not user:
+            self.render_login_form(error="Invalid username")
+        elif hashutils.valid_pw(submitted_username, submitted_password, user.pw_hash):
+            self.login_user(user)
+            self.redirect('/mainpage')
+        else:
+            self.render_login_form(error="Invalid password")
+
+
+
 class LogoutHandler(DefaultHandler):
     def get(self):
-        self.response.write('LogoutHandler!')
+        self.logout_user()
+        self.redirect('/mainpage')
+
+
 class SignupHandler(DefaultHandler):
+
+    def validate_username(self, username):
+        USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+        if USER_RE.match(username):
+            return username
+        else:
+            return ""
+
+    def validate_password(self, password):
+        PWD_RE = re.compile(r"^.{3,20}$")
+        if PWD_RE.match(password):
+            return password
+        else:
+            return ""
+
+    def validate_verify(self, password, verify):
+        if password == verify:
+            return verify
+
+    def validate_email(self, email):
+
+        # allow empty email field
+        if not email:
+            return ""
+
+        EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+                            # (r"^[\S]+@[\S]+.[\S]+$")
+        if EMAIL_RE.match(email):
+            return email
+
     def get(self):
-        self.response.write('SignupHandler!')
+        t = jinja_env.get_template("signup.html")
+        response = t.render(errors={})
+        self.response.out.write(response)
+
+    def post(self):
+        """
+            Validate submitted data, creating a new user if all fields are valid.
+            If data doesn't validate, render the form again with an error.
+
+            This code is essentially identical to the solution to the Signup portion
+            of the Formation assignment. The main modification is that we are now
+            able to create a new user object and store it when we have valid data.
+        """
+
+        submitted_username = self.request.get("username")
+        submitted_password = self.request.get("password")
+        submitted_verify = self.request.get("verify")
+        submitted_email = self.request.get("email")
+
+        username = self.validate_username(submitted_username)
+        password = self.validate_password(submitted_password)
+        verify = self.validate_verify(submitted_password, submitted_verify)
+        email = self.validate_email(submitted_email)
+
+        errors = {}
+        existing_user = self.get_user_by_name(username)
+        has_error = False
+
+        if existing_user:
+            errors['username_error'] = "A user with that username already exists"
+            has_error = True
+        elif (username and password and verify and (email is not None) ):
+
+            # create new user object and store it in the database
+            pw_hash = hashutils.make_pw_hash(username, password)
+            user = User(username=username, pw_hash=pw_hash)
+            user.put()
+
+            # login our new user
+            self.login_user(user)
+        else:
+            has_error = True
+
+            if not username:
+                errors['username_error'] = "That's not a valid username"
+
+            if not password:
+                errors['password_error'] = "That's not a valid password"
+
+            if not verify:
+                errors['verify_error'] = "Passwords don't match"
+
+            if email is None:
+                errors['email_error'] = "That's not a valid email"
+
+        if has_error:
+            t = jinja_env.get_template("signup.html")
+            response = t.render(username=username, email=email, errors=errors)
+            self.response.out.write(response)
+        else:
+            self.redirect('/mainpage')
+
 class ErrorHandler(DefaultHandler):
     def get(self):
         self.response.write('ErrorHandler')
@@ -127,9 +245,11 @@ class ErrorHandler(DefaultHandler):
 
 
 
-class Sparkle(webapp2.RequestHandler):
+class Sparkle(DefaultHandler):
     def get(self):
-        self.response.write('Hello world!')
+        t = jinja_env.get_template("mainpage.html")
+        response = t.render()
+        self.response.out.write(response)
 
 app = webapp2.WSGIApplication([
     ('/', IndexHandler),

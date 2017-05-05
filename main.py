@@ -110,7 +110,9 @@ class MainPageHandler(DefaultHandler):
 
 class NewPostHandler(DefaultHandler):
     def get(self):
-        self.response.write('NewPostHandler!')
+        t = jinja_env.get_template("newpost.html")
+        response = t.render()
+        self.response.out.write(response)
 class LoginHandler(DefaultHandler):
     def get(self):
         self.render_login_form()
@@ -137,10 +139,7 @@ class LoginHandler(DefaultHandler):
 
 
 
-class LogoutHandler(DefaultHandler):
-    def get(self):
-        self.logout_user()
-        self.redirect('/mainpage')
+
 
 
 class SignupHandler(DefaultHandler):
@@ -242,8 +241,34 @@ class ErrorHandler(DefaultHandler):
         self.response.write('ErrorHandler')
 
 
+class ViewPostHandler(DefaultHandler):
+    """" temper used function """
+    def get(self):
+        t = jinja_env.get_template("post.html")
+        response = t.render()
+        self.response.out.write(response)
+# class ViewPostHandler(DefaultHandler):
+#
+#     def get(self, id):
+#         """ Render a page with post determined by the id (via the URL/permalink) """
+#
+#         post = Post.get_by_id(int(id))
+#         if post:
+#             t = jinja_env.get_template("post.html")
+#             response = t.render(post=post)
+#         else:
+#             error = "there is no post with id %s" % id
+#             t = jinja_env.get_template("404.html")
+#             response = t.render(error=error)
+#
+#         self.response.out.write(response)
 
-
+class LogoutHandler(DefaultHandler):
+    def get(self):
+        self.logout_user()
+        t = jinja_env.get_template("logout.html")
+        response = t.render()
+        self.response.out.write(response)
 
 class Sparkle(DefaultHandler):
     def get(self):
@@ -257,5 +282,7 @@ app = webapp2.WSGIApplication([
     ('/newpost', NewPostHandler),
     ('/login', LoginHandler),
     ('/logout', LogoutHandler),
-    ('/signup', SignupHandler)
+    ('/signup', SignupHandler),
+    ('/sparkle/viewpost', ViewPostHandler),
+    webapp2.Route('/sparkle/<id:\d+>', ViewPostHandler)
 ], debug=True)

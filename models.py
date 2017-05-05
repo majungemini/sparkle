@@ -6,7 +6,7 @@ class User(db.Model):
     email = db.StringProperty()
 
 class Post(db.Model):
-    title = db.StringProperty(required = True)
+    img = db.StringProperty(required = True)
     body = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     author = db.ReferenceProperty(User, required = True)

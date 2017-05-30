@@ -1,45 +1,54 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<!-- /*<style>
+.concept {
+    width: 300px;
+    height: auto;
+}
+div {
+    display: inline-block;
+}
+</style>*/ -->
+
 <h1>Sparkle Me</h1>
-{% for post in posts %}
-<<div>
-    <<img src="" alt="">
-    <<p></p>
-</div>
-{% endfor %}
+<div id="container">
+    <div id="scrollbox" >
+        {% for post in posts %}
+        <div class="concept">
+            <div class="panel panel-default">
+              <div class="panel-heading"><a href="/sparkle/{{ post.key().id() }}"><img class="img-thumbnail" src="{{ post.img }}" ></a></div>
+              <div class="panel-body">
+                <p>{{ post.body }}</p>
+                <p class="post-author"> written by
+                    <a href="/sparkle/{{ post.author.username }}">{{ post.author.username }}</a>
+                </p>
+                <div id="text{{post.key().id()}}" class="row">
+                     <div class="col-xs-4">
+                          <button type="button" id="like{{post.key().id()}}" onClick="reply_click(this.id)" name="button" class="btn btn-block btn-primary"><i class="fa fa-thumbs-up"></i>&nbsp;Like</button>
+                     </div>
+                     <div class="col-xs-4">
+                          <button type="button" id="forward{{post.key().id()}}" onClick="reply_click(this.id)" name="button" class="btn btn-block btn-primary"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;Forward</button>
+                      </div>
+                      <div class="col-xs-4">
+                          <button type="button" id="comment{{post.key().id()}}" onClick="reply_click(this.id)" name="button" class="btn btn-block btn-primary"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp;Comment</button>
+                      </div>
+                  </div>
 
-
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-xs-6 col-md-2">
-      <!-- <div class="container"> -->
-        <div class="row">
-            <!-- All personal info should go HERE-->
-            <div class="col-xs-12"><a href="#"><img src="http://i530.photobucket.com/albums/dd349/elegantjohn/imagejpg1-2353.jpg" alt="" class="img-thumbnail"></a></div>
-            <div class="col-xs-12 text-center">
-                <label for="">Will Durant</label>
+              </div>
             </div>
-            <div class="col-xs-12 text-center">
-                <button class="btn btn-primary" type="button" name="button"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp;Follow</button>
-            </div>
-            <table>
-               <tr>
-                 <th>Posts</th>
-                 <th>Favorite</th>
-                 <th>Liked</th>
-               </tr>
-               <tr>
-                 <td class="active"><a href="#"  >JS goes here</a></td>
-                 <td class="warning"><a href="#" >JS goes here</a></td>
-                 <td class="info"><a href="#">JS goes here</a></td>
-               </tr>
-            </table>
-            <!-- Endof All personal info-->
         </div>
-      <!-- </div> -->
+
+        {% endfor %}
     </div>
-    <div class="col-xs-12 col-md-10">
+    <p><span id="status" ></span></p>
+</div>
+
+<!-- <div class="container-fluid">
+
+    <div class="row">
+    <div class="col-md-10">
         <div class="row">
           <div class="col-xs-4"><a href="/sparkle/viewpost"><img src="http://img.picturequotes.com/2/64/63604/history-is-mostly-guessing-the-rest-is-prejudice-quote-1.jpg" alt="" class="img-thumbnail"></a><label for="">History is mostly guessing, the rest is prejudice. ― Will Durant, The Story of Civilization</label>
               <div id="text" class="row">
@@ -50,7 +59,8 @@
                     <button type="button" id="forward" name="button" class="btn btn-block btn-primary"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;
 Forward</button></div>
                 <div class="col-xs-4">
-                    <button type="button" id="comment" name="button" class="btn btn-block btn-primary"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp;Comment</button></div>
+                    <button type="button" id="comment" name="button" class="btn btn-block btn-primary"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp;Comment</button>
+                </div>
                 </div>
                 </div>
           <div class="col-xs-4"><img src="https://s-media-cache-ak0.pinimg.com/736x/02/3b/bd/023bbd927eda903e3e518507e312d860.jpg" alt="" class="img-thumbnail">
@@ -60,39 +70,71 @@ Forward</button></div>
     </div>
 
   </div>
-</div>
+</div> -->
 <div class="person_info">
 <script>
         //dragable
-        $( function() {
-                $("#comment").draggable();
-              } );
-        //like function
-        $("#like").click(function(evt){
-            $(this).attr("disabled", "disabled");
-        });
-
-        // comment function
-        $("#comment").click(function(evt){
-
-            // $("comment").attr("disabled", "disabled");
-            $(this).attr("disabled", "disabled");
-            var textarea_Comment = $("<textarea />").addClass("textComment");
-            var divComment = $("<div/>").append(textarea_Comment).addClass("col-xs-12");
-            var buttonComment = $("<button>Done</button>").addClass("btn btn-primary pull-right").click(function(evt){
-                //add comment to individul page
-                    buttonComment.detach();
-                    textarea_Comment.detach();
-                    $("#comment").removeAttr("disabled");
-            });
-            $("#text").append(divComment).append(buttonComment);
-        });
-
-        //LogoutHandler
-        
+        // $( function() {
+        //         $("#comment").draggable();
+        //       } );
+        // //like function
+        // $("#like").click(function(evt){
+        //     $(this).attr("disabled", "disabled");
+        // });
+        //
+        // // comment function
+        // $("#comment").click(function(evt){
+        //
+        //     // $("comment").attr("disabled", "disabled");
+        //     $(this).attr("disabled", "disabled");
+        //     var textarea_Comment = $("<textarea />").addClass("textComment");
+        //     var divComment = $("<div/>").append(textarea_Comment).addClass("col-xs-12");
+        //     var buttonComment = $("<button>Done</button>").addClass("btn btn-primary pull-right").click(function(evt){
+        //         //add comment to individul page
+        //             buttonComment.detach();
+        //             textarea_Comment.detach();
+        //             $("#comment").removeAttr("disabled");
+        //     });
+        //     $("#text").append(divComment).append(buttonComment);
+        // });
+        //
+        // //LogoutHandler
+        // //Dynamic Scrolling Content Box Using AJAX
+        // $('document').ready(function(){
+        //
+        //     scrollalert();
+        // });
+        //
+        // function scrollalert(){
+        //     var scrolltop=$('#scrollbox').attr('scrollTop');
+        //     var scrollheight=$('#scrollbox').attr('scrollHeight');
+        //     var windowheight=$('#scrollbox').attr('clientHeight');
+        //     var scrolloffset=20;
+        //     if(scrolltop>=(scrollheight-(windowheight+scrolloffset)))
+        //     {
+        //         //fetch new items
+        //         $('#status').text('Loading more items...');
+        //         $.ajax({
+        //             type: "POST",
+        //             url: "/mainpage",
+        //             data: dataString,
+        //             success: function(data) {
+        //             //   $('#query-focus').html(data);
+        //               $('#content').append(data);
+        //             }
+        //           });
+        //
+        //     }
+        //     setTimeout('scrollalert();', 1500);
+        // }
 </script>
 
 </div>
+
+
+
+
+<!--
 <h2>Wisdom Quotes</h2>
 <div class="wp_quotepage"><div class="wp_quotepage_quote">1. You can do anything, but not everything.</div>
 <div class="wp_quotepage_author">—David Allen</div></div><hr>
@@ -113,7 +155,7 @@ Forward</button></div>
 <div class="wp_quotepage"><div class="wp_quotepage_quote">9. To the man who only has a hammer, everything he encounters begins to look like a nail.</div>
 <div class="wp_quotepage_author">—Abraham Maslow</div></div><hr>
 <div class="wp_quotepage"><div class="wp_quotepage_quote">10. We are what we repeatedly do; excellence, then, is not an act but a habit.</div>
-<div class="wp_quotepage_author">—Aristotle</div></div><hr>
+<div class="wp_quotepage_author">—Aristotle</div></div><hr> -->
 
 
 {% endblock %}

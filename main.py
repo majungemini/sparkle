@@ -16,9 +16,9 @@
 #
 import webapp2, jinja2, os, re
 from google.appengine.ext import db
-from models import Post, User
+from models import Post, User, Comment
 import hashutils
-
+# from google.appengine.api import users
 """reuse default, login,signup,logout,hashutils codes from blog assignment"""
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
@@ -28,28 +28,28 @@ auth_paths = [
 ]
 class DefaultHandler(webapp2.RequestHandler):
 
-    def get_post(self, limit,offset):
+    def get_posts(self, limit,offset):
         """get all posts ordered by creation date (descending)"""
         query = Post.all().order('-created')
         return query.fetch(limit=limit, offset=offset)
 
-    def get_posts_by_user(self,useroj,limit,offset):
+    def get_posts_by_user(self,user,limit,offset):
         """
             Get all posts by a specific user,ordered by creation date.
             The user parameter will be a User object,
         """
-        query = Post.all().filter('author', useroj).order('-created')
+        query = Post.all().filter('author', user).order('-created')
         return query.fetch(limit=limit,offset=offset)
 
     def get_user_by_name(self,username):
         """Get a user object from the db, base on their username"""
-        useroj = db.GqlQuery("SELECT * FROM User WHERE username = '%s'"% username)
-        if useroj:
-            return useroj.get()
+        user = db.GqlQuery("SELECT * FROM User WHERE username = '%s'"% username)
+        if user:
+            return user.get()
 
-    def login_user(self,useroj):
+    def login_user(self,user):
         """ Login a user specified by a User object user """
-        user_id = useroj.key().id()
+        user_id = user.key().id()
         self.set_secure_cookie('user_id', str(user_id))
 
     def logout_user(self):
@@ -78,50 +78,136 @@ class DefaultHandler(webapp2.RequestHandler):
         if not self.user and self.request.path in auth_paths:
             self.redirect('/login')
 
+    def render_template(self, template_name, **context):
+        if not self.user:
+            me = "Welcome Visit"
+        else:
+            me= self.user.username
+        t = jinja_env.get_template(template_name)
+        response = t.render(me=me, **context)
+        return response
+
+
+
+
 class IndexHandler(DefaultHandler):
+
 
     def get(self):
         """ List all blog users """
+        # user = users.get_current_user()
+        # print(user)
         users = User.all()
-        # response = self.render_template('index.html', users=users)
-        t = jinja_env.get_template("mainpage.html")
-        response = t.render(users = users)
+        response = self.render_template('index.html', users=users)
+        # t = jinja_env.get_template("index.html")
+        # response = t.render(users = users, me=self.user)
         self.response.write(response)
 
+
+offset=0
 class MainPageHandler(DefaultHandler):
-    story_size=5
-    offset=0
+    page_size=5
+
+
+
     def get(self, username=""):
         """Fetch posts for all users,or a specific user,depending on request parameters"""
         if username:
             user = self.get_user_by_name(username)
-            posts =self.get_posts_by_user(user, self.page_size,offset)
+            posts = self.get_posts_by_user(user, self.page_size, offset)
         else:
-            posts = self.get_posts(self.page_size,offset)
+            posts = self.get_posts(self.page_size, offset)
 
-        t = jinja_env.get_template("mainpage")
-        response = t.render(
-                            posts=posts,
-
-                            page_size=self.page_size,
-
-                            username=username)
+        # t = jinja_env.get_template("mainpage.html")
+        response = self.render_template('mainpage.html', posts=posts,
+                                                        page_size=self.page_size,
+                                                        username=username)
+        # response = t.render(
+        #                     posts=posts,
+        #                     page_size=self.page_size,
+        #                     username=username)
         self.response.out.write(response)
+class UserViewHandler(DefaultHandler):
+    page_size=10
+
+    def get(self, username=""):
+        """Fetch posts for all users,or a specific user,depending on request parameters"""
+        if username:
+            user = self.get_user_by_name(username)
+            posts = self.get_posts_by_user(user, self.page_size, offset)
+            counter = Post.all().filter('author', user).count()
+        else:
+            self.redirect('/login')
+        # t = jinja_env.get_template("userview.html")
+        response = self.render_template("userview.html", posts=posts,
+                                                        page_size=self.page_size,
+                                                        username=username,
+                                                        counter=counter)
+        # response = t.render(
+        #                     posts=posts,
+        #                     page_size=self.page_size,
+        #                     username=username,
+        #                     counter=counter)
+        self.response.out.write(response)
+class UserLookupHandler(DefaultHandler):
+    def get(self, username=""):
+        """Fetch posts for all users,or a specific user,depending on request parameters"""
+        if username:
+            user = self.get_user_by_name(username)
+            posts = self.get_posts_by_user(user, self.page_size, offset)
+        else:
+            self.redirect('/login')
+        # t = jinja_env.get_template("userlookup.html")
+        response = self.render_template("userlookup.html", posts=posts,
+                                            page_size=self.page_size,
+                                            username=username)
+        self.response.out.write(response)
+
 
 class NewPostHandler(DefaultHandler):
-    def get(self):
-        t = jinja_env.get_template("newpost.html")
-        response = t.render()
+    def render_form(self, img="", body="", error=""):
+        """ Render the new post form with or without an error, based on parameters """
+        # t = jinja_env.get_template("newpost.html")
+        response = self.render_template("newpost.html", img=img, body=body, error=error)
         self.response.out.write(response)
-class LoginHandler(DefaultHandler):
-    def get(self):
-        self.render_login_form()
 
+    def get(self):
+        self.render_form()
+
+    def post(self):
+        """ Create a new blog post if possible. Otherwise, return with an error message """
+        img = self.request.get("img")
+        body = self.request.get("body")
+
+        if img and body:
+
+            # create a new Post object and store it in the database
+            post = Post(
+                img=img,
+                body=body,
+                author=self.user)
+            post.put()
+
+            # get the id of the new post, so we can render the post's page (via the permalink)
+            id = post.key().id()
+            self.redirect("/sparkle/%s" % id)
+        else:
+            error = "we need both a img and a body!"
+            self.render_form(img, body, error)
+
+
+
+class LoginHandler(DefaultHandler):
     def render_login_form(self, error=""):
         """Render the login form with or without an error,base on parameters """
         t = jinja_env.get_template("login.html")
         response = t.render(error=error)
         self.response.out.write(response)
+
+    def get(self):
+        self.render_login_form()
+
+
 
     def post(self):
         submitted_username = self.request.get("username")
@@ -133,7 +219,8 @@ class LoginHandler(DefaultHandler):
             self.render_login_form(error="Invalid username")
         elif hashutils.valid_pw(submitted_username, submitted_password, user.pw_hash):
             self.login_user(user)
-            self.redirect('/mainpage')
+            self.redirect('/sparkle/%s' % submitted_username)
+            # self.redirect('/mainpage?username=submitted_username')
         else:
             self.render_login_form(error="Invalid password")
 
@@ -242,26 +329,33 @@ class ErrorHandler(DefaultHandler):
 
 
 class ViewPostHandler(DefaultHandler):
-    """" temper used function """
-    def get(self):
-        t = jinja_env.get_template("post.html")
-        response = t.render()
+    # """" temper used function """
+    # def get(self):
+    #     t = jinja_env.get_template("post.html")
+    #     response = t.render()
+    #     self.response.out.write(response)
+
+
+    def get(self, id):
+        """ Render a page with post determined by the id (via the URL/permalink) """
+
+        post = Post.get_by_id(int(id))
+        if post:
+            # t = jinja_env.get_template("post.html")
+            response = self.render_template("post.html",post=post)
+        else:
+            error = "there is no post with id %s" % id
+            t = jinja_env.get_template("404.html")
+            response = t.render(error=error)
+
         self.response.out.write(response)
-# class ViewPostHandler(DefaultHandler):
-#
-#     def get(self, id):
-#         """ Render a page with post determined by the id (via the URL/permalink) """
-#
-#         post = Post.get_by_id(int(id))
-#         if post:
-#             t = jinja_env.get_template("post.html")
-#             response = t.render(post=post)
-#         else:
-#             error = "there is no post with id %s" % id
-#             t = jinja_env.get_template("404.html")
-#             response = t.render(error=error)
-#
-#         self.response.out.write(response)
+
+    def post(self,id):
+        post = Post.get_by_id(int(id))
+        if post:
+            submitted_comment = self.request.get("comment")
+            t = jinja_env.get_template("post.html")
+            response = t.render(post=post)
 
 class LogoutHandler(DefaultHandler):
     def get(self):
@@ -278,11 +372,18 @@ class Sparkle(DefaultHandler):
 
 app = webapp2.WSGIApplication([
     ('/', IndexHandler),
-    ('/mainpage',Sparkle),
+    ('/mainpage',MainPageHandler),
     ('/newpost', NewPostHandler),
     ('/login', LoginHandler),
     ('/logout', LogoutHandler),
     ('/signup', SignupHandler),
-    ('/sparkle/viewpost', ViewPostHandler),
-    webapp2.Route('/sparkle/<id:\d+>', ViewPostHandler)
+    webapp2.Route('/sparkle/<id:\d+>', ViewPostHandler),
+    webapp2.Route('/sparkle/<username:[a-zA-Z0-9_-]{3,20}>', UserViewHandler),
+    webapp2.Route('/sparkle/<username:[a-zA-Z0-9_-]{3,20}>/favorite', UserLookupHandler),
+    webapp2.Route('/sparkle/<username:[a-zA-Z0-9_-]{3,20}>/like', UserLookupHandler)
 ], debug=True)
+
+
+auth_paths = [
+    '/newpost'
+]

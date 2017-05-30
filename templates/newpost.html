@@ -8,22 +8,22 @@
 
     <h1>New Post</h1>
     </div>
-<form method="post form-horizontal">
 
-  <div class="form-group row">
-    <label>
-        <div class="col-xs-6">Img URL: </div>
-        <input class="col-xs-6" type="text" name="title" value="">
-    </label>
-    </div>
-     <div class="form-group">
-    <label>
-        <div class="col-xs-6">Post:</div>
-        <textarea class="col-xs-6"name="body"> </textarea>
-    </label>
-</div>
-    <!-- <div class="error">{{ error }}</div> -->
-    <input type="submit">
-</form>
+    <form method="post">
+        <label>
+            <div class="col-xs-6">Img URL: </div>
+            <input class="col-xs-6" type="text" name="img" value="{{img}}">
+        </label>
+
+
+        <label>
+            <div class="col-xs-6">Post:</div>
+            <textarea class="col-xs-6"name="body">{{body}}</textarea>
+        </label>
+
+        <div class="error">{{ error }}</div>
+        <input type="submit">
+    </form>
+  </div>
 </div>
 {% endblock %}

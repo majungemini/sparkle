@@ -4,77 +4,51 @@
         <meta charset="utf-8"/>
         <meta name=viewport content="width=device-width, initial-scale=1">
 
-        <script src="https://code.jquery.com/jquery-2.2.3.js"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <!-- Optional theme -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
         <!-- Latest compiled and minified JavaScript -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
         <!-- Font Awesome -->
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
-        <link rel="stylesheet" href="styles/main.css"/>
+        <link rel="stylesheet" href="/styles/main.css" type="text/css"/>
+
+
+        <script src="https://code.jquery.com/jquery-2.2.3.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="/js/main.js"></script>
+
+
+
         <title>Sparkle</title>
         <!-- <link rel="stylesheet" href="/styles/main.css" type="text/css" charset="utf-8"/> -->
-    <style media="screen">
-    body {
-        margin: 0px auto;
-        width: 800px
-        background-color: blue;
-    }
-    body * {
-        font-family: Verdana,Geneva, sans-serif;
-        font-size: 100%;
-        font-weight: inherit;
-        line-height: 1.2em;
-        margin: 0px;
-        padding: 0px;
-        text-decoration:none;
-        vertical-align: baseline;
-    }
 
-    /* Navigation links */
-    nav ul {
-        list-style:none;
-        margin-top:5px;
-
-    }
-    nav li {
-        float:left;
-        width:15%;
-        text-align:center;
-        border:1px solid rgb(68,76,169);
-        margin:5px 2px 15px 2px;
-    }
-
-    nav li a {
-        display: block;
-        color:rgb(68,76,169);
-        text-decoration: none;
-        background-color: white;
-    }
-
-    nav li a:hover{
-        color:white;
-        background-color: rgb(68,76,169);
-    }
-
-    </style>
     </head>
     <body>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/mainpage">All Posts</a></li>
-                <li><a href="/newpost">New Post</a></li>
-                <li><a href="/login">Login</a></li>
-                <li><a href="/logout">Logout</a></li>
-                <li><a href="/signup">Signup</a></li>
-            </ul>
-        </nav><br><br><br>
+        <div class="container-fluid">
+          <div class="row">
+              <nav>
+                  <ul>
+                      <div class="col-md-3"><li><a href="/">Home</a></li></div>
+                      <div class="col-md-3"><li><a href="/mainpage">All Posts</a></li></div>
+                      <div class="col-md-3"><li><a href="/newpost">New Post</a></li></div>
+                      <div class="col-md-3"><li><a id="login" href="/login">Login</a></li></div>
+                      <div class="col-md-3"> <li><a href="/signup">Signup</a></li></div>
+                      <div class="col-md-3"><li><a id = "logincheck" href="/sparkle/{{ me }}">{{ me }}</a></li></div>
+                      <div class="col-md-3"><li><a id="logout" href="/logout">Logout</a></li></div>
+
+                  </ul>
+              </nav>
+          </div>
+        </div>
+
+
+        
         {% block content %}
         {% endblock %}
-         <script src="javascripts/javascript.js"></script>
+    <script>
+
+
+    </script>
     </body>
 </html>

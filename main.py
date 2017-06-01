@@ -152,14 +152,15 @@ class UserViewHandler(DefaultHandler):
 class UserLookupHandler(DefaultHandler):
     def get(self, username=""):
         """Fetch posts for all users,or a specific user,depending on request parameters"""
+        page_size=5
         if username:
             user = self.get_user_by_name(username)
-            posts = self.get_posts_by_user(user, self.page_size, offset)
+            posts = self.get_posts_by_user(user, page_size, offset)
         else:
             self.redirect('/login')
         # t = jinja_env.get_template("userlookup.html")
         response = self.render_template("userlookup.html", posts=posts,
-                                            page_size=self.page_size,
+                                            page_size=page_size,
                                             username=username)
         self.response.out.write(response)
 
@@ -340,22 +341,29 @@ class ViewPostHandler(DefaultHandler):
         """ Render a page with post determined by the id (via the URL/permalink) """
 
         post = Post.get_by_id(int(id))
+        comments = db.GqlQuery("SELECT * FROM Comment WHERE postid = '%s'"% id)
         if post:
             # t = jinja_env.get_template("post.html")
-            response = self.render_template("post.html",post=post)
+            response = self.render_template("post.html",post=post,comments=comments)
         else:
             error = "there is no post with id %s" % id
             t = jinja_env.get_template("404.html")
-            response = t.render(error=error)
+            response = t.render(error=error,comments=comments)
 
         self.response.out.write(response)
 
     def post(self,id):
         post = Post.get_by_id(int(id))
         if post:
-            submitted_comment = self.request.get("comment")
+            submitted_comment = self.request.get("commentname")
+            comment = Comment(
+                    postid = id,
+                    cmt= submitted_comment)
+            comment.put()
+            comments = db.GqlQuery("SELECT * FROM Comment WHERE postid = '%s'"% id)
             t = jinja_env.get_template("post.html")
-            response = t.render(post=post)
+            response = t.render(post=post,comments=comments)
+            self.response.out.write(response)
 
 class LogoutHandler(DefaultHandler):
     def get(self):

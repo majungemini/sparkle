@@ -14,11 +14,13 @@
     <p class="post-time"> post by ---  {{ post.created }}
     </p>
     <br>
-
-
+    {% for comment in comments %}
+        <div><p> {{ comment.cmt }}</p></div>
+    {% endfor %}
     <form method="post">
         <textarea name="commentname" id="commentconcept" rows="8" cols="80"></textarea>
         <div class="error">{{ error }}</div>
+        <!-- <button type="button" id="{{post.key().id()}}" onClick="post_comment(this.id)" name="button" class="btn btn-block btn-primary">Comment</button> -->
         <input type="submit" value="Comment"  class="btn  btn-primary">
     </form>
 

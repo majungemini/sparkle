@@ -356,13 +356,15 @@ class ViewPostHandler(DefaultHandler):
         post = Post.get_by_id(int(id))
         if post:
             submitted_comment = self.request.get("commentname")
+            # commentauthor = self.request.get("commentauthor")
             comment = Comment(
                     postid = id,
-                    cmt= submitted_comment)
+                    cmt= submitted_comment
+                    )
             comment.put()
             comments = db.GqlQuery("SELECT * FROM Comment WHERE postid = '%s'"% id)
-            t = jinja_env.get_template("post.html")
-            response = t.render(post=post,comments=comments)
+            # t = jinja_env.get_template("post.html")
+            response = self.render_template("post.html", post=post,comments=comments)
             self.response.out.write(response)
 
 class LogoutHandler(DefaultHandler):

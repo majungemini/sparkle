@@ -12,6 +12,7 @@ class Post(db.Model):
     author = db.ReferenceProperty(User, required = True)
 
 class Comment(db.Model):
-    postid = db.StringProperty()
-    cmt = db.TextProperty()
+    postid = db.StringProperty(required = True)
+    cmt = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+    
